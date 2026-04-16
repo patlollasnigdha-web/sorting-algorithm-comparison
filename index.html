@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sorting Algorithm Race</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #f4f4f4;
+        }
+
+        input {
+            padding: 10px;
+            width: 300px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .box {
+            background: white;
+            margin: 15px auto;
+            padding: 15px;
+            width: 60%;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2> Sorting Algorithm Race</h2>
+
+<input type="text" id="numbers" placeholder="Enter numbers (e.g. 5,3,8,1)">
+<br><br>
+<button onclick="startSort()">Start</button>
+
+<div class="box">
+    <h3> Results</h3>
+    <p id="size"></p>
+    <p id="bubble"></p>
+    <p id="merge"></p>
+    <p id="complexity"></p>
+    <h3 id="fastest"></h3>
+</div>
+
+<div class="box">
+    <h3>Sorted Output</h3>
+    <p id="output"></p>
+</div>
+
+<canvas id="chart" width="400" height="200"></canvas>
+
+<script>
+let chart;
+
+async function startSort() {
+    const input = document.getElementById("numbers").value;
+
+    if (!input) {
+        alert("Enter numbers first!");
+        return;
+    }
+
+    try {
+        const response = await fetch('/sort', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numbers: input })
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+            alert(result.error);
+            return;
+        }
+
+        document.getElementById("size").innerText =
+            "Input Size: " + result.size;
+
+        document.getElementById("bubble").innerText =
+            "Bubble Sort: " + result.bubble_time.toFixed(6) + " sec";
+
+        document.getElementById("merge").innerText =
+            "Merge Sort: " + result.merge_time.toFixed(6) + " sec";
+
+        document.getElementById("complexity").innerText =
+            "Bubble → O(n²) | Merge → O(n log n)";
+
+        document.getElementById("fastest").innerText =
+            " Fastest: " + result.fastest;
+
+        document.getElementById("output").innerText =
+            result.merge_result.join(", ");
+
+        drawChart(result.bubble_time, result.merge_time);
+
+    } catch (error) {
+        alert("Server error. Check if Flask is running.");
+        console.log(error);
+    }
+}
+
+function drawChart(bubble, merge) {
+    const ctx = document.getElementById("chart");
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ["Bubble Sort", "Merge Sort"],
+            datasets: [{
+                label: "Time (seconds)",
+                data: [bubble, merge]
+            }]
+        }
+    });
+}
+</script>
+
+</body>
+</html>
